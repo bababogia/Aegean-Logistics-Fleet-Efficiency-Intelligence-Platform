@@ -6,12 +6,17 @@ from sqlalchemy import create_engine, text
 # ------------------------------------------------------------------------------
 # Configuration & Database Connection
 # ------------------------------------------------------------------------------
-RAW_DATA_DIR = "../data/raw"
-PROCESSED_DATA_DIR = "../data/processed"
-os.makedirs(PROCESSED_DATA_DIR, exist_ok=True)
+from pathlib import Path
 
-# PostgreSQL Connection String (Update with your local credentials)
-DB_URI = "postgresql://postgres:postgres@localhost:5432/aegean_logistics"
+# Set paths dynamically relative to repository root
+BASE_DIR = Path(__file__).resolve().parent.parent
+RAW_DATA_DIR = BASE_DIR / "data" / "raw"
+PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
+
+RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
+PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+# PostgreSQL Connection String (Update local credentials)
+DB_URI = "postgresql://postgres:"yourpassword"@localhost:5432/my_database"
 
 def parse_mixed_timestamps(series):
     """Parses timestamps formatted in inconsistent formats across raw records."""
@@ -37,7 +42,7 @@ def run_etl():
 
     # Data Quality Rules:
     # Rule A: Remove invalid negative cargo weight anomalies
-    df_shipments = df_shipments[df_shipments["Cargo Weight Ton"] >= 0].copy()
+    df_shipments = df_shipments[df_shipments["Cargo Weight"] >= 0].copy()
 
     # Rule B: Calculate delays in minutes
     df_shipments["dep_delay_minutes"] = (
@@ -130,7 +135,7 @@ def run_etl():
         "actual_dep_timestamp": df_shipments["Actual Departure"],
         "sched_arr_timestamp": df_shipments["Scheduled Arrival"],
         "actual_arr_timestamp": df_shipments["Actual Arrival"],
-        "cargo_weight_ton": df_shipments["Cargo Weight Ton"],
+        "cargo_weight_ton": df_shipments["Cargo Weight"],
         "fuel_consumed_liters": df_shipments["Fuel Consumed Liters"],
         "dep_delay_minutes": df_shipments["dep_delay_minutes"],
         "arr_delay_minutes": df_shipments["arr_delay_minutes"],
